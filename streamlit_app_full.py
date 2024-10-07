@@ -16,20 +16,20 @@ from folium.plugins import HeatMap
 st.set_page_config(layout="wide")
 
 @st.cache_data
-def load_data(fuente_info):
-    tx = pd.read_csv("./cr_geocode_full_viv_to_st.csv")
-    tx = tx.drop(columns="cedula")
-    tx = tx.dropna()
+def load_data(fuente_info,periodo_info):
+    tx = pd.read_csv("./cr_geocode_full_st.csv")
 
+    df_periodo = pd.Series(data=periodo_info)
     df_fuente  = pd.Series(data=fuente_info)
 
-    tx = tx[tx["Fuente"].isin(values=df_fuente)]
+    tx = tx[tx["fuente"].isin(values=df_fuente)]
+    tx = tx[tx["periodo"].isin(values=df_periodo)]
     tx.reset_index(drop=True, inplace=True)
     return tx
 
 @st.cache_resource
-def create_map(map_type, zoom, fuente_info):
-    tx = load_data(fuente_info = fuente_info)
+def create_map(map_type, zoom, fuente_info,periodo_info):
+    tx = load_data(fuente_info = fuente_info,periodo_info=periodo_info)
     heatmap_data = []
     for i in range(tx.shape[0]):
         lat, lon = tx.loc[i,["y","x"]]
@@ -42,7 +42,8 @@ def create_map(map_type, zoom, fuente_info):
         0.9: 'orange',
         1: 'red'
     }
-    init_location = [9.936543, -84.098601]
+    
+    init_location = [9.935607413760522, -84.09473336256822]
     #init_location = [9.860764,-83.931041]
     if map_type == "OpenStreetMap":
         m = folium.Map(location=init_location, 
@@ -104,11 +105,15 @@ fuente_info = st.sidebar.multiselect(label="Fuente Información",
                                     options=["Vivienda","Laboral"], 
                                     default = ["Vivienda"],
                                     key = "fuente_info1")
+periodo_info1 = st.sidebar.multiselect(label="Cuatrimestre", 
+                                    options=['2024_2', '2024_3'], 
+                                    default = ["2024_2"],
+                                    key = "periodo_info1")
 
 
 #st.text(body=carrera)
 if foco == "San José":
-    zoom = 12
+    zoom = 10
 if foco == "Nacional":
     zoom = 8
 
@@ -128,24 +133,26 @@ fuente_info2 = st.sidebar.multiselect(label="Fuente Información",
                                     options=["Vivienda","Laboral"], 
                                     default = ["Vivienda"],
                                     key = "fuente_info2")
-marca2 = st.sidebar.multiselect(label="Marca", 
-                                options=["UAM","Latina"], 
-                                default =["UAM"],
-                                key = "marca2" )
+periodo_info2 = st.sidebar.multiselect(label="Cuatrimestre", 
+                                    options=['2024_2', '2024_3'], 
+                                    default = ["2024_3"],
+                                    key = "periodo_info2")
 
 #st.text(body=carrera)
 if foco2 == "San José":
-    zoom2 = 12
+    zoom2 = 10
 if foco2 == "Nacional":
     zoom2 = 8
 
 m1 = create_map(map_type=map_type, 
             zoom = zoom,
-            fuente_info = fuente_info)
+            fuente_info = fuente_info,
+            periodo_info = periodo_info1)
 
 m2 = create_map(map_type=map_type, 
             zoom = zoom2,
-            fuente_info = fuente_info2)
+            fuente_info = fuente_info2,
+            periodo_info = periodo_info2)
 
 
 col1, col2 = st.columns(spec=2)
